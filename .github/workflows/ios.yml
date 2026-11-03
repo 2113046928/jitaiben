@@ -1,0 +1,89 @@
+name: 构建 iOS App
+
+# 手动点一下就能跑，也可以推到 main 自动跑
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "www/**"
+      - "capacitor.config.json"
+      - "package.json"
+      - ".github/workflows/**"
+
+jobs:
+  ipa:
+    name: 编译并打包 .ipa
+    runs-on: macos-14
+    timeout-minutes: 40
+
+    steps:
+      - name: 取代码
+        uses: actions/checkout@v4
+
+      - name: 装 Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: 环境信息
+        run: |
+          xcodebuild -version
+          node -v
+          pod --version || true
+
+      - name: 装依赖
+        run: npm install --no-audit --no-fund
+
+      - name: 生成 iOS 工程
+        run: |
+          npx cap add ios
+          npx cap sync ios
+
+      - name: 确认 workspace 存在
+        run: |
+          cd ios/App
+          if [ ! -d "App.xcworkspace" ]; then
+            echo "::warning::没有 App.xcworkspace，重新跑 pod install"
+            pod install --repo-update
+          fi
+          ls -d App.xcworkspace
+          ls App.xcodeproj
+
+      - name: 编译（不签名）
+        run: |
+          set -o pipefail
+          cd ios/App
+          xcodebuild \
+            -workspace App.xcworkspace \
+            -scheme App \
+            -configuration Release \
+            -sdk iphoneos \
+            -destination "generic/platform=iOS" \
+            -derivedDataPath "$RUNNER_TEMP/dd" \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            build
+
+      - name: 打包成 ipa
+        run: |
+          APP="$RUNNER_TEMP/dd/Build/Products/Release-iphoneos/App.app"
+          if [ ! -d "$APP" ]; then
+            echo "::error::没找到 App.app，编译产物在这里："
+            find "$RUNNER_TEMP/dd/Build/Products" -maxdepth 2 -name "*.app" || true
+            exit 1
+          fi
+          mkdir -p "$RUNNER_TEMP/Payload"
+          cp -R "$APP" "$RUNNER_TEMP/Payload/"
+          cd "$RUNNER_TEMP"
+          zip -qry jitaiben.ipa Payload
+          ls -lh jitaiben.ipa
+
+      - name: 上传安装包
+        uses: actions/upload-artifact@v4
+        with:
+          name: jitaiben-ipa
+          path: ${{ runner.temp }}/jitaiben.ipa
+          if-no-files-found: error
+          retention-days: 30

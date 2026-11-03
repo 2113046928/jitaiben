@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#F2F2F7">
+<meta name="description" content="机台本：报警速查、设备结构、间隔复习、随手笔记。数据只存在本机。">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="机台本">
+<meta name="format-detection" content="telephone=no">
+<title>机台本</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-192.png">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<!-- 剖面线图案：所有结构图共用 -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <pattern id="hatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+      <line x1="0" y1="0" x2="0" y2="6" stroke="#141619" stroke-width=".9"/>
+    </pattern>
+  </defs>
+</svg>
+
+<div class="app" id="app">
+
+  <!-- 速查 -->
+  <section class="screen" data-tab="home" data-on="1">
+    <nav class="nav">
+      <span class="nav-title">速查</span>
+      <div class="nav-right">
+        <button class="nav-btn" data-act="new-alarm" aria-label="新建报警">＋</button>
+      </div>
+    </nav>
+    <div class="lt">
+      <h1>速查</h1>
+      <p id="home-sub">报警号、现象、备件</p>
+    </div>
+    <div class="searchbar" id="searchbar">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.4 15.4 20 20"/>
+      </svg>
+      <input id="q" type="search" inputmode="search" autocomplete="off" spellcheck="false"
+             placeholder="报警号、现象、备件" aria-label="搜索报警">
+      <button type="button" class="clr" id="qclear" aria-label="清空">
+        <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round">
+          <path d="M6 6l12 12M18 6L6 18"/>
+        </svg>
+      </button>
+    </div>
+    <div class="chips" id="chips" role="group" aria-label="按机台筛"></div>
+    <div class="group">
+      <div class="card" id="home-list"></div>
+    </div>
+  </section>
+
+  <!-- 设备 -->
+  <section class="screen" data-tab="devices">
+    <nav class="nav">
+      <span class="nav-title">设备</span>
+      <div class="nav-right">
+        <button class="nav-btn" data-act="new-device" aria-label="添加设备">＋</button>
+      </div>
+    </nav>
+    <div class="lt">
+      <h1>设备</h1>
+      <p id="dev-sub">按机台看结构</p>
+    </div>
+    <div id="dev-list"></div>
+  </section>
+
+  <!-- 记忆 -->
+  <section class="screen" data-tab="memo">
+    <nav class="nav">
+      <span class="nav-title">记忆</span>
+    </nav>
+    <div class="lt">
+      <h1>记忆</h1>
+      <p id="memo-sub">间隔复习</p>
+    </div>
+    <div id="memo-body"></div>
+  </section>
+
+  <!-- 笔记 -->
+  <section class="screen" data-tab="notes">
+    <nav class="nav">
+      <span class="nav-title">笔记</span>
+      <div class="nav-right">
+        <button class="nav-btn" data-act="new-note" aria-label="新建笔记">＋</button>
+      </div>
+    </nav>
+    <div class="lt">
+      <h1>笔记</h1>
+      <p id="notes-sub">调机、交接、参数</p>
+    </div>
+    <div id="notes-body"></div>
+  </section>
+
+  <!-- 我的 -->
+  <section class="screen" data-tab="me">
+    <nav class="nav">
+      <span class="nav-title">我的</span>
+    </nav>
+    <div class="lt">
+      <h1>我的</h1>
+      <p id="me-sub">数据与设置</p>
+    </div>
+    <div id="me-body"></div>
+  </section>
+
+  <nav class="tabbar" id="tabbar" aria-label="主导航">
+    <button class="tab" data-tab="home" aria-selected="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+        <circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.4 15.4 20 20"/>
+      </svg>
+      <span>速查</span>
+    </button>
+    <button class="tab" data-tab="devices" aria-selected="false">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round">
+        <path d="M12 3 21 8v8l-9 5-9-5V8z"/><path d="M3 8l9 5 9-5M12 13v8"/>
+      </svg>
+      <span>设备</span>
+    </button>
+    <button class="tab" data-tab="memo" aria-selected="false">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round">
+        <rect x="3" y="7" width="13" height="13" rx="2.5"/>
+        <path d="M7 4h11.5a2.5 2.5 0 0 1 2.5 2.5V16"/>
+      </svg>
+      <span>记忆</span>
+      <i class="badge" data-badge="memo"></i>
+    </button>
+    <button class="tab" data-tab="notes" aria-selected="false">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round">
+        <path d="M6 3h8l5 5v13H6z"/><path d="M14 3v5h5"/><path d="M9 12h6M9 16h4"/>
+      </svg>
+      <span>笔记</span>
+    </button>
+    <button class="tab" data-tab="me" aria-selected="false">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round">
+        <circle cx="12" cy="8" r="3.6"/><path d="M5 20c0-3.6 3.1-6 7-6s7 2.4 7 6"/>
+      </svg>
+      <span>我的</span>
+    </button>
+  </nav>
+
+</div>
+
+<div class="push" id="push"></div>
+<div class="photob" id="photob" aria-hidden="true" aria-label="拍照建型"></div>
+<div class="sheet" id="sheet"></div>
+<div class="drill" id="drill"></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<input type="file" id="importFile" accept=".json,application/json" hidden>
+
+<script src="seed.js"></script>
+<script src="devices.js"></script>
+<script src="photo3d.js"></script>
+<script src="viewer.js"></script>
+<script src="glview.js"></script>
+<script src="core.js"></script>
+<script src="ui.js"></script>
+<script>
+  if ("serviceWorker" in navigator && location.protocol.indexOf("http") === 0) {
+    window.addEventListener("load", function () {
+      navigator.serviceWorker.register("sw.js").catch(function () {});
+    });
+  }
+</script>
+</body>
+</html>

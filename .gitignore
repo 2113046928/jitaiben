@@ -1,0 +1,7 @@
+node_modules/
+ios/
+build/
+*.xcarchive
+*.ipa
+.DS_Store
+.env
